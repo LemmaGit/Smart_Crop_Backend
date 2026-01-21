@@ -17,8 +17,12 @@ const messageSchema = new mongoose.Schema(
       enum: ['text', 'image'],
       default: 'text',
     },
+    isBookmarked: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { _id: false, timestamps: { createdAt: true, updatedAt: false } }
+  { timestamps: { createdAt: true, updatedAt: false } }
 );
 
 const chatSchema = new mongoose.Schema(
@@ -27,7 +31,11 @@ const chatSchema = new mongoose.Schema(
       type: String,
       required: true,
       index: true,
-      unique: true,
+    },
+    name: {
+      type: String,
+      default: 'New Chat',
+      trim: true,
     },
     messages: {
       type: [messageSchema],

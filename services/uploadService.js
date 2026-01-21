@@ -1,27 +1,15 @@
 const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinary');
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'smart-crop-chat',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
   },
 });
 
-const uploadBufferToCloudinary = (fileBuffer, originalname) =>
-  new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: 'smart-crop-chat', filename_override: originalname },
-      (error, result) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve(result.secure_url);
-      }
-    );
+const upload = multer({ storage: storage });
 
-    uploadStream.end(fileBuffer);
-  });
-
-module.exports = { upload, uploadBufferToCloudinary };
+module.exports = { upload };
