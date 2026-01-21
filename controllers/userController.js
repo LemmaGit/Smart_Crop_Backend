@@ -1,14 +1,15 @@
 const { StatusCodes } = require('http-status-codes');
 const { clerkClient } = require('@clerk/express');
 const asyncHandler = require('express-async-handler');
-const { birthDateSchema } = require('../validators/userValidators');
+const { userUpdateSchema } = require('../validators/userValidators');
+const { getAuth } = require('@clerk/express');
 
-const updateBirthDate = asyncHandler(async (req, res) => {
-  const { userId } = req.auth;
-  const parsed = birthDateSchema.parse(req.body);
+const updateUser = asyncHandler(async (req, res) => {
+  const { userId } = getAuth(req);
+  const parsed = userUpdateSchema.parse(req.body);
 
   const updatedUser = await clerkClient.users.updateUserMetadata(userId, {
-    publicMetadata: { birthDate: parsed.birthDate },
+    publicMetadata: parsed,
   });
 
   return res.status(StatusCodes.OK).json({
@@ -17,4 +18,4 @@ const updateBirthDate = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { updateBirthDate };
+module.exports = { updateUser };

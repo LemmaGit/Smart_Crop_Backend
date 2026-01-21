@@ -22,27 +22,6 @@ const createMessage = asyncHandler(async (req, res) => {
     messages: [message],
   });
 
-  /*if (chatId) {
-    // Append to existing chat
-    chat = await Chat.findOneAndUpdate(
-      { _id: chatId, userId },
-      { $push: { messages: message } },
-      { new: true, runValidators: true }
-    );
-
-    if (!chat) {
-      return res.status(StatusCodes.NOT_FOUND).json({
-        message: 'Chat not found.',
-      });
-    }
-  } else {
-    // Create new chat
-    chat = await Chat.create({
-      userId,
-      messages: [message],
-    });
-  }*/
-
   return res.status(StatusCodes.CREATED).json({ chat });
 });
 
