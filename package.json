@@ -1,9 +1,9 @@
 {
   "name": "smart_crop_backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
@@ -11,10 +11,13 @@
   "description": "",
   "dependencies": {
     "@clerk/express": "^1.7.63",
+    "cloudinary": "^2.9.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "http-status-codes": "^2.3.0",
     "mongoose": "^9.1.5",
+    "multer": "^2.0.2",
     "nodemon": "^3.1.11",
     "zod": "^4.3.5"
   }
