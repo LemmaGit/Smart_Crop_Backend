@@ -1,5 +1,8 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet")
+const xss = require("xss-clean")
+const mongoSanitize = require("express-mongo-sanitize")
 const { z } = require("zod");
 const { StatusCodes, getReasonPhrase } = require("http-status-codes");
 const { ClerkExpressWithAuth, clerkMiddleware } = require("@clerk/express");
@@ -9,9 +12,15 @@ const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 
-app.use(cors());
+app.use(helmet());
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+}));
 app.use(clerkMiddleware());
 app.use(express.json({ limit: "2mb" }));
+app.use(xss());
+app.use(mongoSanitize());
 app.use(express.urlencoded({ extended: true }));
 app.use(ClerkExpressWithAuth());
 
