@@ -1,9 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import asyncHandler from "express-async-handler";
-import {
-  prepareMessage,
-  formatBookmarkedMessages,
-} from "../services/chatService.js";
+import { formatBookmarkedMessages } from "../services/chatService.js";
 import Chat from "../models/chat.js";
 import { getAuth } from "@clerk/express";
 
@@ -39,6 +36,7 @@ export const saveMessage = asyncHandler(async (req, res) => {
 
 // For showing the user chat history
 export const getUserChats = asyncHandler(async (req, res) => {
+  console.log("GETTING HISTORY");
   const { userId } = getAuth(req);
   const chats = await Chat.find({ userId })
     .select("name createdAt updatedAt")

@@ -28,9 +28,9 @@ export const errorHandler = (err, _req, _res, next) => {
     error: true,
     code: statusCode,
     message,
-    ...err(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   };
   _res.locals.errorMessage = message;
   if (process.env.NODE_ENV === "development") console.log(err);
-  res.status(statusCode).json(response);
+  _res.status(statusCode).json(response);
 };

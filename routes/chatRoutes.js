@@ -17,12 +17,12 @@ import {
   messageWithIdSchema,
 } from "../validators/chatValidators.js";
 import { prepareMessage } from "../middlewares/prepareMessage.js";
+import { customRequireAuthToken } from "../middlewares/customRequireAuth.js";
 
 const router = Router();
 
-router.use(requireAuth());
-
-router.get("/", requireAuth(), getUserChats);
+// router.get("/", requireAuth(), getUserChats);
+router.get("/", customRequireAuthToken, getUserChats);
 router.get("/bookmarked", requireAuth(), getBookmarkedMessages);
 router.get("/:id", requireAuth(), getChatMessagesById);
 router.post(

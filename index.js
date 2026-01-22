@@ -43,6 +43,7 @@ app.get("/health", async (_req, res) => {
 // Routes
 app.use("/chat", chatRoutes);
 app.use((req, res, next) => {
+  console.log(req.originalUrl.toWellFormed());
   next(
     new ApiError(StatusCodes.NOT_FOUND, getReasonPhrase(StatusCodes.NOT_FOUND)),
   );
