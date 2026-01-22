@@ -4,6 +4,7 @@ import { connectDb } from "./config/db.js";
 import app from "./index.js";
 
 const PORT = process.env.PORT || 3000;
+let server;
 
 const start = async () => {
   try {
@@ -14,7 +15,7 @@ const start = async () => {
     // );
     await connectDb(process.env.MONGODB_LOCAL_URI);
 
-    app.listen(PORT, () => {
+    server = app.listen(PORT, () => {
       console.log(`Backend running on port ${PORT} 👍`);
     });
   } catch (error) {
@@ -24,3 +25,20 @@ const start = async () => {
 };
 
 start();
+
+const exitHandler = () => {
+  if (server)
+    server.close(() => {
+      console.log("Server Closed");
+      process.exit(1);
+    });
+  else process.exit(1);
+};
+
+const unExpectedErrorHandler = (error) => {
+  console.log(error);
+  exitHandler();
+};
+
+process.on("uncaughtException", unExpectedErrorHandler);
+process.on("unhandledRejection", unExpectedErrorHandler);

@@ -12,11 +12,9 @@ import { getAuth } from "@clerk/express";
 export const createMessage = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
 
-  const message = prepareMessage(req.body, req.file);
-
   const chat = await Chat.create({
     userId,
-    messages: [message],
+    messages: [req.message],
   });
 
   return res.status(StatusCodes.CREATED).json({
@@ -26,14 +24,12 @@ export const createMessage = asyncHandler(async (req, res) => {
 });
 
 export const saveMessage = asyncHandler(async (req, res) => {
-  const message = prepareMessage(req.body, req.file);
-
-  const { chatId } = req.body;
+  const { chatId } = req.validatedData;
 
   const chat = await Chat.findByIdAndUpdate(
     chatId,
     {
-      $push: { messages: message },
+      $push: { messages: req.message },
     },
     { new: true, runValidators: true },
   );

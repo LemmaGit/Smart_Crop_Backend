@@ -1,14 +1,18 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-// const xss = require("xss-clean");
-// const mongoSanitize = require("express-mongo-sanitize");
-import { z } from "zod";
+
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
-import { requireAuth } from "@clerk/express";
+import {
+  clerkMiddleware,
+  clerkClient,
+  requireAuth,
+  getAuth,
+} from "@clerk/express";
 
 import chatRoutes from "./routes/chatRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
+import { errorHandler, errorConverter } from "./middlewares/error.js";
+import ApiError from "./utils/ApiError.js";
 
 const app = express();
 
@@ -20,24 +24,31 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "2mb" }));
-// app.use(xss());
-// app.use(mongoSanitize());
+app.use(clerkMiddleware());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/health", requireAuth(), (_req, res) =>
-  res.status(StatusCodes.OK).json({ status: "ok", user: _req.auth }),
-);
-// app.get("/health", (_req, res) =>
-//   res.status(StatusCodes.OK).json({ status: "ok" }),
-// );
+app.get("/health", async (_req, res) => {
+  // Use `getAuth()` to get the user's `userId`
+  const { userId } = getAuth(_req);
+  if (!userId) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ status: "unauthorized" });
+  }
+  // Use Clerk's JS Backend SDK to get the user's User object
+  const user = await clerkClient.users.getUser(userId);
+  res.status(StatusCodes.OK).json({ status: "ok", user });
+});
 
 // Routes
 app.use("/chat", chatRoutes);
-app.use("/users", userRoutes);
+app.use((req, res, next) => {
+  next(
+    new ApiError(StatusCodes.NOT_FOUND, getReasonPhrase(StatusCodes.NOT_FOUND)),
+  );
+});
 
-// Global error handler
-// eslint-disable-next-line no-unused-vars
-app.use((err, _req, res, _next) => {
+/*app.use((err, _req, res, _next) => {
   if (err instanceof z.ZodError) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       message: "Validation failed",
@@ -50,6 +61,8 @@ app.use((err, _req, res, _next) => {
   return res.status(status).json({
     message: err.message || getReasonPhrase(status),
   });
-});
+});*/
+app.use(errorConverter);
+app.use(errorHandler);
 
 export default app;

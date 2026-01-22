@@ -1,7 +1,11 @@
-import { z } from "zod";
+import Joi from "joi";
 
-export const chatBodySchema = z.object({
-  user: z.enum(["user", "bot"]),
-  content: z.string().optional(),
-  imagePath: z.string().optional(),
+export const baseChatBodySchema = Joi.object({
+  user: Joi.string().valid("user", "bot").required(),
+  content: Joi.string().optional(),
+  imagePath: Joi.string().optional(),
+});
+
+export const messageWithIdSchema = baseChatBodySchema.keys({
+  chatId: Joi.string().required(),
 });

@@ -1,5 +1,3 @@
-import { chatBodySchema } from "../validators/chatValidators.js";
-
 export const prepareMessage = (body, file) => {
   const hasImage = Boolean(file?.path);
   const parsed = chatBodySchema.parse({
