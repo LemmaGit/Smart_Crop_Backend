@@ -1,9 +1,9 @@
-const express = require("express");
-const { requireAuth } = require("@clerk/express");
-const { updateUser } = require("../controllers/userController");
+import { Router } from "express";
+import { requireAuth } from "@clerk/express";
+import { updateUser } from "../controllers/userController.js";
 
-const router = express.Router();
+const router = Router();
 
 router.patch("/me", requireAuth(), updateUser);
 
-module.exports = router;
+export default router;

@@ -1,29 +1,32 @@
-const express = require('express');
-const { requireAuth } = require('@clerk/express');
-const {
-    createMessage,
-    getUserChats,
-    getChatMessagesById,
-    getBookmarkedMessages,
-    updateChat,
-    toggleMessageBookmark,
-    deleteChat,
-    saveMessage,
-} = require('../controllers/chatController');
-const { upload } = require('../services/uploadService');
+import { Router } from "express";
+import { requireAuth } from "@clerk/express";
+import {
+  createMessage,
+  getUserChats,
+  getChatMessagesById,
+  getBookmarkedMessages,
+  updateChat,
+  toggleMessageBookmark,
+  deleteChat,
+  saveMessage,
+} from "../controllers/chatController.js";
+import { upload } from "../services/uploadService.js";
 
-const router = express.Router();
-
+const router = Router();
 
 router.use(requireAuth());
 
-router.get('/', getUserChats);
-router.get('/bookmarked', getBookmarkedMessages);
-router.get('/:id', getChatMessagesById);
-router.post('/messages', upload.single('image'), createMessage);
-router.patch('/messages', upload.single('image'), saveMessage);
-router.patch('/:id', updateChat);
-router.patch('/:chatId/messages/:messageId/bookmark', toggleMessageBookmark);
-router.delete('/:id', deleteChat);
+router.get("/", requireAuth(), getUserChats);
+router.get("/bookmarked", requireAuth(), getBookmarkedMessages);
+router.get("/:id", requireAuth(), getChatMessagesById);
+router.post("/messages", upload.single("image"), requireAuth(), createMessage);
+router.patch("/messages", upload.single("image"), requireAuth(), saveMessage);
+router.patch("/:id", requireAuth(), updateChat);
+router.patch(
+  "/:chatId/messages/:messageId/bookmark",
+  requireAuth(),
+  toggleMessageBookmark,
+);
+router.delete("/:id", requireAuth(), deleteChat);
 
-module.exports = router;
+export default router;

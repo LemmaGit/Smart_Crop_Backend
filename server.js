@@ -1,7 +1,7 @@
-require('dotenv').config();
-const { StatusCodes } = require('http-status-codes');
-const { connectDb } = require('./config/db');
-const app = require('./index');
+import "dotenv/config";
+import { StatusCodes } from "http-status-codes";
+import { connectDb } from "./config/db.js";
+import app from "./index.js";
 
 const PORT = process.env.PORT || 3000;
 
@@ -18,7 +18,7 @@ const start = async () => {
       console.log(`Backend running on port ${PORT} 👍`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error.message);
+    console.error("Failed to start server:", error.message);
     process.exitCode = StatusCodes.INTERNAL_SERVER_ERROR;
   }
 };

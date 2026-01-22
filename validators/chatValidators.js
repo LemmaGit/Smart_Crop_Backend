@@ -1,9 +1,7 @@
-const { z } = require('zod');
+import { z } from "zod";
 
-const chatBodySchema = z.object({
-  user: z.enum(['user', 'bot']),
+export const chatBodySchema = z.object({
+  user: z.enum(["user", "bot"]),
   content: z.string().optional(),
   imagePath: z.string().optional(),
 });
-
-module.exports = { chatBodySchema };

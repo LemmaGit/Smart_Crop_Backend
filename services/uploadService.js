@@ -1,15 +1,13 @@
-const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../config/cloudinary');
+import multer from "multer";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinary.js";
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'smart-crop-chat',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    folder: "smart-crop-chat",
+    allowed_formats: ["jpg", "png", "jpeg", "webp"],
   },
 });
 
-const upload = multer({ storage: storage });
-
-module.exports = { upload };
+export const upload = multer({ storage: storage });

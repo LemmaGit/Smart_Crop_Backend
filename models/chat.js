@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
   {
     user: {
       type: String,
-      enum: ['user', 'bot'],
+      enum: ["user", "bot"],
       required: true,
     },
     content: {
@@ -14,14 +14,14 @@ const messageSchema = new mongoose.Schema(
     },
     imagePath: {
       type: String,
-      default: undefined
+      default: undefined,
     },
     isBookmarked: {
       type: Boolean,
       default: false,
     },
   },
-  { timestamps: { createdAt: true, updatedAt: false } }
+  { timestamps: { createdAt: true, updatedAt: false } },
 );
 
 const chatSchema = new mongoose.Schema(
@@ -33,7 +33,7 @@ const chatSchema = new mongoose.Schema(
     },
     name: {
       type: String,
-      default: 'New Chat',
+      default: "New Chat",
       trim: true,
     },
     messages: {
@@ -41,11 +41,11 @@ const chatSchema = new mongoose.Schema(
       default: [],
       validate: {
         validator: (arr) => Array.isArray(arr),
-        message: 'Messages must be an array.',
+        message: "Messages must be an array.",
       },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-module.exports = mongoose.model('Chat', chatSchema);
+export default mongoose.model("Chat", chatSchema);
