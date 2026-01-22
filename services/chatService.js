@@ -1,10 +1,11 @@
 const { chatBodySchema } = require('../validators/chatValidators');
 
 const prepareMessage = (body, file) => {
-    const hasImage = Boolean(file);
+    const hasImage = Boolean(req.file?.path);
     const parsed = chatBodySchema.parse({
         user: body.user,
         content: body.content,
+        imagePath: req.file?.path
     });
 
     if (!hasImage && !parsed.content) {
@@ -12,17 +13,19 @@ const prepareMessage = (body, file) => {
     }
 
     let messageContent = parsed.content;
-    let contentType = 'text';
+    // let contentType = 'text';
 
-    if (hasImage) {
-        messageContent = file.path;
-        contentType = 'image';
-    }
+    // if (hasImage) {
+    //     messageContent = file.path;
+    //     contentType = 'image';
+    // }
 
     return {
         user: parsed.user,
-        content: messageContent,
-        contentType,
+        // content: messageContent,
+        content: parsed.content,
+        // contentType,
+        imagePath
     };
 };
 

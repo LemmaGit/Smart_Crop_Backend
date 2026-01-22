@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 
+// Here remove the field contentType since the content is going to be 
+// the text that is going to be send by the user and also add a field called
+// imagePath to hold the url of the image uploaded, and the message should have
+// either a content ie the user text or the image or both to proceed
 const messageSchema = new mongoose.Schema(
   {
     user: {
@@ -12,11 +16,17 @@ const messageSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    contentType: {
+
+    imagePath: {
       type: String,
-      enum: ['text', 'image'],
-      default: 'text',
+      default: undefined
     },
+
+    // contentType: {
+    //   type: String,
+    //   enum: ['text', 'image'],
+    //   default: 'text',
+    // },
     isBookmarked: {
       type: Boolean,
       default: false,
