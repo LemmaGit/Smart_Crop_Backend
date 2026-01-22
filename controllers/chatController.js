@@ -2,33 +2,48 @@ const { StatusCodes } = require('http-status-codes');
 const asyncHandler = require('express-async-handler');
 const { prepareMessage, formatBookmarkedMessages } = require('../services/chatService');
 const Chat = require('../models/chat');
+const { getAuth } = require('@clerk/express');
 
-// TODO change the file upload logic
+
+// For finding user use -> clerkClient.users.getUser(userId)
+
 const createMessage = asyncHandler(async (req, res) => {
-  const { userId } = req.auth;
+  const { userId } = getAuth(req);
 
-  const messageData = prepareMessage(req.body, req.file);
-
-  const message = {
-    user: messageData.user,
-    content: messageData.content,
-    contentType: messageData.contentType,
-  };
-
-  // let chat;
+  const message = prepareMessage(req.body, req.file);
 
   const chat = await Chat.create({
     userId,
     messages: [message],
   });
 
-  return res.status(StatusCodes.CREATED).json({ chat });
+  return res.status(StatusCodes.CREATED).json({
+    chat,
+    chatId: chat._id,
+  });
+
+});
+
+const saveMessage = asyncHandler(async (req, res) => {
+  const message = prepareMessage(req.body, req.file);
+
+  const { chatId } = req.body;
+
+  const chat = await Chat.findByIdAndUpdate(
+    chatId,
+    {
+      $push: { messages: message },
+    },
+    { new: true, runValidators: true }
+  );
+
+  return res.status(StatusCodes.OK).json({ chat });
+
 });
 
 // For showing the user chat history
 const getUserChats = asyncHandler(async (req, res) => {
-  const { userId } = req.auth;
-  // Return summary of chats (id, name, createdAt, updatedAt)
+  const { userId } = getAuth(req);
   const chats = await Chat.find({ userId })
     .select('name createdAt updatedAt')
     .sort({ updatedAt: -1 });
@@ -38,7 +53,7 @@ const getUserChats = asyncHandler(async (req, res) => {
 
 // For getting messages of the Chat
 const getChatMessagesById = asyncHandler(async (req, res) => {
-  const { userId } = req.auth;
+  const { userId } = getAuth(req);
   const { chatId } = req.params;
 
   const chat = await Chat.findOne({ _id: chatId, userId }).select('messages')
@@ -54,8 +69,7 @@ const getChatMessagesById = asyncHandler(async (req, res) => {
 });
 
 const getBookmarkedMessages = asyncHandler(async (req, res) => {
-  const { userId } = req.auth;
-  // Find chats that contain at least one bookmarked message
+  const { userId } = getAuth(req);
   const chats = await Chat.find({ userId, 'messages.isBookmarked': true })
 
   const bookmarkedMessages = formatBookmarkedMessages(chats);
@@ -64,12 +78,11 @@ const getBookmarkedMessages = asyncHandler(async (req, res) => {
 });
 
 const updateChat = asyncHandler(async (req, res) => {
-  const { userId } = req.auth;
+  const { userId } = getAuth(req);
   const { id } = req.params;
   const { name } = req.body;
 
-  const updates = {};
-  if (name !== undefined) updates.name = name;
+  const updates = { name };
 
   const chat = await Chat.findOneAndUpdate(
     { _id: id, userId },
@@ -87,7 +100,7 @@ const updateChat = asyncHandler(async (req, res) => {
 });
 
 const toggleMessageBookmark = asyncHandler(async (req, res) => {
-  const { userId } = req.auth;
+  const { userId } = getAuth(req);
   const { chatId, messageId } = req.params;
 
   const chat = await Chat.findOne({ _id: chatId, userId });
@@ -112,7 +125,7 @@ const toggleMessageBookmark = asyncHandler(async (req, res) => {
 });
 
 const deleteChat = asyncHandler(async (req, res) => {
-  const { userId } = req.auth;
+  const { userId } = getAuth(req);
   const { id } = req.params;
 
   const chat = await Chat.findOneAndDelete({ _id: id, userId });
@@ -128,6 +141,7 @@ const deleteChat = asyncHandler(async (req, res) => {
 
 module.exports = {
   createMessage,
+  saveMessage,
   getUserChats,
   getChatMessagesById,
   getBookmarkedMessages,
