@@ -1,7 +1,7 @@
 import ApiError from "../utils/ApiError.js";
 
 export const prepareMessage = (req, res, next) => {
-  const hasImage = Boolean(file?.path);
+  const hasImage = Boolean(req.file?.path);
 
   if (!hasImage && !req.validatedData.content) {
     return next(
@@ -18,5 +18,7 @@ export const prepareMessage = (req, res, next) => {
   };
 
   req.message = message;
+  console.log(req.message, "Message")
+  console.log(req.validatedData, "Validated Data")
   next();
 };

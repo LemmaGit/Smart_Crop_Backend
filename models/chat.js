@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 
+// here the message should have a question and answer properties so when
+// a chat is bookMarked then we respond with both
+// or when the messages are fetched, in the frontend or here in the back format
+// it as question and answer
 const messageSchema = new mongoose.Schema(
   {
     user: {
@@ -24,6 +28,20 @@ const messageSchema = new mongoose.Schema(
   { timestamps: { createdAt: true, updatedAt: false } },
 );
 
+const fullMessageSchema = new mongoose.Schema({
+  message: {
+    type: {
+      question: {
+        type: messageSchema,
+        required: true
+      },
+      answer: {
+        type: messageSchema,
+        required: true
+      }
+    }
+  }
+})
 const chatSchema = new mongoose.Schema(
   {
     userId: {
@@ -44,6 +62,11 @@ const chatSchema = new mongoose.Schema(
         message: "Messages must be an array.",
       },
     },
+    /*
+    
+    
+    
+    */
   },
   { timestamps: true },
 );

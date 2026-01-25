@@ -17,19 +17,24 @@ import {
   messageWithIdSchema,
 } from "../validators/chatValidators.js";
 import { prepareMessage } from "../middlewares/prepareMessage.js";
-import { customRequireAuthToken } from "../middlewares/customRequireAuth.js";
+import { clerkAuth } from "../middlewares/clerkAuth.js";
 
 const router = Router();
-
-// router.get("/", requireAuth(), getUserChats);
-router.get("/", customRequireAuthToken, getUserChats);
+// TODO: CURRENTLY OUR ROUTES ARE NOT PROTECTED 
+router.get("/", getUserChats);
 router.get("/bookmarked", requireAuth(), getBookmarkedMessages);
 router.get("/:id", requireAuth(), getChatMessagesById);
 router.post(
   "/messages",
   upload.single("image"),
-  requireAuth(),
-  validate(messageWithIdSchema),
+  clerkAuth,
+  (req, res, next) => {
+    console.log(req.file.path, "Uploaded")
+    console.log(req.body, "Body")
+    console.log(req.userId, "User")
+    next()
+  },
+  validate(baseChatBodySchema),
   prepareMessage,
   createMessage,
 );
@@ -37,7 +42,7 @@ router.patch(
   "/messages",
   upload.single("image"),
   requireAuth(),
-  validate(baseChatBodySchema),
+  validate(messageWithIdSchema),
   prepareMessage,
   saveMessage,
 );

@@ -13,7 +13,9 @@ export const customRequireAuthToken = asyncHandler(async (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
 
-  const payload = await verifyToken(token);
+  const payload = await verifyToken(token, {
+    secretKey: process.env.CLERK_SECRET_KEY,
+  });
 
   req.auth = {
     userId: payload.sub,

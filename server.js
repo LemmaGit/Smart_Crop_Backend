@@ -13,7 +13,9 @@ const start = async () => {
     //     .replace("<username>", process.env.MONGODB_USERNAME)
     //     .replace("<password>", process.env.MONGODB_PASSWORD)
     // );
-    await connectDb(process.env.MONGODB_LOCAL_URI);
+    const uri = process.env.MONGODB_LOCAL_URI.replace("localhost", "127.0.0.1");
+    console.log("Connecting to DB:", uri);
+    await connectDb(uri);
 
     server = app.listen(PORT, () => {
       console.log(`Backend running on port ${PORT} 👍`);

@@ -6,13 +6,50 @@ import { getAuth } from "@clerk/express";
 
 // For finding user use -> clerkClient.users.getUser(userId)
 
+import { generateResponse } from "../services/gemini.js";
+
 export const createMessage = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
+  const { language, latitude, longitude } = req.validatedData;
 
-  const chat = await Chat.create({
+  // 1. Create chat with User Message
+  let chat = await Chat.create({
     userId,
     messages: [req.message],
   });
+
+  // 2. Generate Bot Response
+  try {
+    const botResponseText = await generateResponse({
+      history: [],
+      message: req.message.content,
+      imagePath: req.message?.imagePath,
+      language,
+      latitude,
+      longitude,
+    });
+
+    // 3. Add Bot Message
+    const botMessage = {
+      user: "bot",
+      content: botResponseText,
+    };
+
+    chat.messages.push(botMessage);
+    await chat.save();
+  } catch (error) {
+    console.error("Gemini Generation Error:", error);
+
+    const errorMessage = {
+      user: "bot",
+      content: "Sorry, I am having trouble processing your request right now.",
+    };
+    // Instead of saving the error message just delete the chat 
+    await Chat.findByIdAndDelete(chat._id);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Sorry, I am having trouble processing your request right now.",
+    });
+  }
 
   return res.status(StatusCodes.CREATED).json({
     chat,
@@ -21,15 +58,52 @@ export const createMessage = asyncHandler(async (req, res) => {
 });
 
 export const saveMessage = asyncHandler(async (req, res) => {
-  const { chatId } = req.validatedData;
+  const { chatId, language, latitude, longitude } = req.validatedData;
 
-  const chat = await Chat.findByIdAndUpdate(
+  // 1. Add User Message
+  let chat = await Chat.findByIdAndUpdate(
     chatId,
     {
       $push: { messages: req.message },
     },
     { new: true, runValidators: true },
   );
+
+  if (!chat) {
+    return res.status(StatusCodes.NOT_FOUND).json({ message: "Chat not found" });
+  }
+
+  // 2. Generate Bot Response
+  try {
+    // History should exclude the message we just added (the last one)
+    // chat.messages includes it now.
+    const history = chat.messages.slice(0, -1);
+
+    const botResponseText = await generateResponse({
+      history,
+      message: req.message.content,
+      imagePath: req.message.imagePath,
+      language,
+      latitude,
+      longitude,
+    });
+
+    const botMessage = {
+      user: "bot",
+      content: botResponseText,
+    };
+
+    chat.messages.push(botMessage);
+    await chat.save();
+  } catch (error) {
+    console.error("Gemini Generation Error:", error);
+    const errorMessage = {
+      user: "bot",
+      content: "Sorry, I am having trouble processing your request right now.",
+    };
+    chat.messages.push(errorMessage);
+    await chat.save();
+  }
 
   return res.status(StatusCodes.OK).json({ chat });
 });

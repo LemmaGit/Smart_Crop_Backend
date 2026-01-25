@@ -3,7 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import { getReasonPhrase, StatusCodes } from "http-status-codes";
 
 export const errorConverter = (err, _req, _res, next) => {
-  const error = err;
+  let error = err;
   if (!(error instanceof ApiError)) {
     const statusCode =
       error.statusCode || error instanceof mongoose.Error
@@ -26,7 +26,7 @@ export const errorHandler = (err, _req, _res, next) => {
   }
   const response = {
     error: true,
-    code: statusCode,
+    code: statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
     message,
     ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   };
