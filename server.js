@@ -8,12 +8,13 @@ let server;
 
 const start = async () => {
   try {
-    // await connectDb(
+    // const uri = await connectDb(
     //   "mongodb+srv://<username>:<password>@smartcrop.x1n8twl.mongodb.net/"
     //     .replace("<username>", process.env.MONGODB_USERNAME)
     //     .replace("<password>", process.env.MONGODB_PASSWORD)
     // );
-    const uri = process.env.MONGODB_LOCAL_URI.replace("localhost", "127.0.0.1");
+    // const uri = process.env.MONGODB_LOCAL_URI.replace("localhost", "127.0.0.1");
+    const uri = process.env.MONGODB_REMOTE_URI;
     console.log("Connecting to DB:", uri);
     await connectDb(uri);
 
