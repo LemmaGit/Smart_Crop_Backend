@@ -4,9 +4,6 @@ import "dotenv/config";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({
-    // model: "gemini-1.5-flash" 
-    // model: "gemini-1.5-pro"
-    // model: "gemini-pro"
     model: "gemini-2.5-flash-lite"
 });
 
@@ -59,14 +56,13 @@ export const generateResponse = async ({
     latitude,
     longitude,
 }) => {
+
+    let weatherData = null;
     try {
-        // 1. Fetch Weather Data
-        let weatherData = null;
         if (latitude && longitude) {
             weatherData = await getWeather(latitude, longitude)
         }
 
-        // 2. Construct System Prompt / Context
         let systemPrompt = `You are an intelligent AI assistant for a Smart Crop application. 
     Your goal is to assist farmers and users with agricultural queries, plant identification, and general questions.
     `;
@@ -83,18 +79,14 @@ export const generateResponse = async ({
       Use this weather information to provide better advice if relevant to the user's query (e.g., watering advice, pest control).`;
         }
 
-        // 3. Prepare Chat History
-        // Convert DB message format to Gemini format
-        // User roles: 'user' -> 'user', 'bot' -> 'model'
         const chatHistory = history
             .filter(msg => msg.content && msg.content.trim() !== "")
             .map(msg => ({
-                role: msg.user === "user" ? "user" : "bot",
+                role: msg.user === "user" ? "user" : "model",
                 parts: [{ text: msg.content }],
             }));
 
 
-        // Start chat with history
         const chat = model.startChat({
             history: chatHistory,
             systemInstruction: {
@@ -104,12 +96,13 @@ export const generateResponse = async ({
         });
 
 
-        // 4. Send Message
         let result;
         if (imagePath) {
-            // Updated to await the async file converter
             const imagePart = await fileToGenerativePart(imagePath, "image/jpeg");
-            result = await chat.sendMessage([message, imagePart]);
+            const promptText = message && message.trim() !== ""
+                ? message
+                : "Here is an the plant image";
+            result = await chat.sendMessage([promptText, imagePart]);
         } else {
             result = await chat.sendMessage(message);
         }
@@ -118,5 +111,27 @@ export const generateResponse = async ({
     } catch (error) {
         console.error("Gemini API Error:", error);
         throw new Error("Failed to generate AI response.");
+    }
+}
+
+
+export const generateChatName = async (message, imagePath) => {
+    try {
+        let content;
+        if (imagePath) {
+            const imagePart = await fileToGenerativePart(imagePath, "image/jpeg");
+            const promptText = message && message.trim() !== ""
+                ? `Generate a very short, concise title (3-5 words max) for a chat that starts with this message: "${message}" and this image. Do not include quotes or special characters in the output.`
+                : `Generate a very short, concise title (3-5 words max) for a chat that starts with this image. Do not include quotes or special characters in the output.`;
+            content = [promptText, imagePart];
+        } else {
+            content = `Generate a very short, concise title (3-5 words max) for a chat that starts with this message: "${message}". Do not include quotes or special characters in the output.`;
+        }
+
+        const result = await model.generateContent(content);
+        return result.response.text().trim();
+    } catch (error) {
+        console.error("Gemini Name Generation Error:", error);
+        return "New Chat"; // Fallback
     }
 };

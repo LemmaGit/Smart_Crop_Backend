@@ -1,47 +1,49 @@
 import mongoose from "mongoose";
+import ApiError from "../utils/ApiError.js";
 
-// here the message should have a question and answer properties so when
-// a chat is bookMarked then we respond with both
-// or when the messages are fetched, in the frontend or here in the back format
-// it as question and answer
 const messageSchema = new mongoose.Schema(
   {
     user: {
       type: String,
-      enum: ["user", "bot"],
+      enum: ["user", "model"],
       required: true,
     },
     content: {
       type: String,
-      required: true,
       trim: true,
     },
     imagePath: {
       type: String,
       default: undefined,
     },
+
+  },
+  { timestamps: { createdAt: true, updatedAt: false } },
+);
+
+messageSchema.pre("validate", function () {
+  if (!this.content && !this.imagePath) {
+    throw new ApiError(400, "Either content or imagePath must be provided");
+  }
+});
+
+const fullMessageSchema = new mongoose.Schema(
+  {
+    question: {
+      type: messageSchema,
+      required: true,
+    },
+    answer: {
+      type: messageSchema,
+      required: true,
+    },
     isBookmarked: {
       type: Boolean,
       default: false,
     },
   },
-  { timestamps: { createdAt: true, updatedAt: false } },
 );
 
-const fullMessageSchema = new mongoose.Schema({
-  message: {
-    type: {
-      question: {
-        type: messageSchema,
-        required: true
-      },
-      answer: {
-        type: messageSchema,
-        required: true
-      }
-    }
-  }
-})
 const chatSchema = new mongoose.Schema(
   {
     userId: {
@@ -53,20 +55,16 @@ const chatSchema = new mongoose.Schema(
       type: String,
       default: "New Chat",
       trim: true,
+      // unique: true,
     },
     messages: {
-      type: [messageSchema],
+      type: [fullMessageSchema],
       default: [],
       validate: {
         validator: (arr) => Array.isArray(arr),
         message: "Messages must be an array.",
       },
-    },
-    /*
-    
-    
-    
-    */
+    }
   },
   { timestamps: true },
 );

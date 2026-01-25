@@ -1,8 +1,16 @@
+import { StatusCodes } from "http-status-codes";
 import ApiError from "../utils/ApiError.js";
 
 export const prepareMessage = (req, res, next) => {
-  const hasImage = Boolean(req.file?.path);
-
+  const hasImage = Boolean(req.file);
+  if (hasImage && !req.file.path) {
+    return next(
+      new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Image upload failed, try again later.",
+      ),
+    );
+  }
   if (!hasImage && !req.validatedData.content) {
     return next(
       new ApiError(
@@ -18,7 +26,5 @@ export const prepareMessage = (req, res, next) => {
   };
 
   req.message = message;
-  console.log(req.message, "Message")
-  console.log(req.validatedData, "Validated Data")
   next();
 };
