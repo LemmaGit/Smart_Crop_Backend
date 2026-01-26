@@ -141,17 +141,26 @@ export const getChatMessagesById = asyncHandler(async (req, res) => {
 
   return res.status(StatusCodes.OK).json({ chat });
 });
+
 export const getBookmarkedMessages = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
-  const chats = await Chat.find({
-    userId,
-    "messages.isBookmarked": true,
-  });
 
-  const bookmarkedMessages = formatBookmarkedMessages(chats);
+  const bookmarkedMessages = await Chat.aggregate([
+    { $match: { userId } },
+    { $unwind: "$messages" },
+    { $match: { "messages.isBookmarked": true } },
+    {
+      $project: {
+        _id: 0,
+        chatId: "$_id",
+        message: "$messages",
+      },
+    },
+  ]);
 
   return res.status(StatusCodes.OK).json({ messages: bookmarkedMessages });
 });
+
 export const toggleMessageBookmark = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
   const { chatId, messageId } = req.params;
