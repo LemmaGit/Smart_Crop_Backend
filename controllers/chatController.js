@@ -61,7 +61,9 @@ export const saveMessage = asyncHandler(async (req, res) => {
   const questionTimestamp = new Date();
   const chat = await Chat.findById(chatId);
   if (!chat) {
-    return res.status(StatusCodes.NOT_FOUND).json({ message: "Chat not found" });
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json({ message: "Chat not found" });
   }
 
   const history = chat.messages.flatMap((pair) => [
@@ -90,13 +92,11 @@ export const saveMessage = asyncHandler(async (req, res) => {
 
     chat.messages.push(newPair);
     await chat.save();
-    newMessageId = chat.messages[chat.messages.length - 1]._id
+    newMessageId = chat.messages[chat.messages.length - 1]._id;
   } catch (error) {
     console.error("Gemini Generation Error:", error);
     try {
-      chat.messages = chat.messages.filter(
-        msg => msg._id !== newMessageId
-      );
+      chat.messages = chat.messages.filter((msg) => msg._id !== newMessageId);
       await chat.save();
     } catch (deleteError) {
       console.error("Failed to delete message:", deleteError);
@@ -115,10 +115,17 @@ export const getUserChats = asyncHandler(async (req, res) => {
 
   return res.status(StatusCodes.OK).json({ chats });
 });
-// For getting messages of the Chat 
+// For getting messages of the Chat
 export const getChatMessagesById = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
   const { chatId } = req.params;
+  if (!chatId) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      chat: {
+        messages: [],
+      },
+    });
+  }
   console.log("CHAT ID", chatId);
   const chat = await Chat.findOne({ _id: chatId, userId })
     .select("messages")
@@ -126,7 +133,9 @@ export const getChatMessagesById = asyncHandler(async (req, res) => {
 
   if (!chat) {
     return res.status(StatusCodes.NOT_FOUND).json({
-      message: "Chat not found.",
+      chat: {
+        messages: [],
+      },
     });
   }
 
