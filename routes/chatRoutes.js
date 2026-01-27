@@ -7,12 +7,16 @@ import {
   toggleMessageBookmark,
   deleteChat,
   saveMessage,
+  analyzeCrop,
+  getUserAnalyses,
 } from "../controllers/chatController.js";
 import { upload } from "../services/uploadService.js";
 import validate from "../middlewares/validate.js";
 import { chatBodySchema } from "../validators/chatValidators.js";
 import { prepareMessage } from "../middlewares/prepareMessage.js";
 import { clerkAuth } from "../middlewares/clerkAuth.js";
+import { detectDisease } from "../middlewares/detectDisease.js";
+import { requireAuth } from "@clerk/express";
 
 const router = Router();
 
@@ -99,6 +103,46 @@ router.get("/", clerkAuth, getUserChats);
 router.get("/bookmarked", clerkAuth, getBookmarkedMessages);
 /**
  * @swagger
+ * /chat/analyze:
+ *   get:
+ *     summary: Analyze a crop image for diseases
+ *     tags: [Chat]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: imagePath
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The Cloudinary image URL to analyze
+ *     responses:
+ *       200:
+ *         description: Analysis successful
+ *       400:
+ *         description: Identification failed or invalid input
+ *       500:
+ *         description: Server error
+ */
+router.get("/analyze", clerkAuth, analyzeCrop);
+/**
+ * @swagger
+ * /chat/analyses:
+ *   get:
+ *     summary: Get all crop analyses for the authenticated user
+ *     tags: [Chat]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of analyses
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/analyses", clerkAuth, getUserAnalyses);
+
+/**
+ * @swagger
  * /chat/{chatId}:
  *   get:
  *     summary: Get chat by ID
@@ -154,6 +198,7 @@ router.post(
   "/messages",
   upload.single("image"),
   clerkAuth,
+  // detectDisease,
   validate(chatBodySchema),
   prepareMessage,
   createMessage,
@@ -194,6 +239,8 @@ router.patch(
   "/messages/:chatId",
   upload.single("image"),
   clerkAuth,
+  // requireAuth({}),
+  // detectDisease,
   validate(chatBodySchema),
   prepareMessage,
   saveMessage,
@@ -256,5 +303,4 @@ router.patch(
  *         description: Unauthorized
  */
 router.delete("/:id", clerkAuth, deleteChat);
-
 export default router;

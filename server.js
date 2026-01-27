@@ -15,7 +15,7 @@ const start = async () => {
     // );
     // const uri = process.env.MONGODB_LOCAL_URI.replace("localhost", "127.0.0.1");
     const uri = process.env.MONGODB_REMOTE_URI;
-    console.log("Connecting to DB:");
+    console.log("Connecting ...");
     await connectDb(uri);
 
     server = app.listen(PORT, () => {

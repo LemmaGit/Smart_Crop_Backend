@@ -8,8 +8,8 @@ import { clerkMiddleware } from "@clerk/express";
 import chatRoutes from "./routes/chatRoutes.js";
 import { errorHandler, errorConverter } from "./middlewares/error.js";
 import ApiError from "./utils/ApiError.js";
-import swaggerUi from 'swagger-ui-express';
-import { swaggerSpec } from './config/swagger.js';
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger.js";
 
 const app = express();
 
@@ -25,7 +25,7 @@ app.use(clerkMiddleware());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/chat", chatRoutes);
 app.use((req, res, next) => {
   next(

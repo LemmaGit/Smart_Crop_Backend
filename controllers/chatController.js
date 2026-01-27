@@ -4,7 +4,13 @@ import { formatBookmarkedMessages } from "../services/chatService.js";
 import Chat from "../models/chat.js";
 import { getAuth } from "@clerk/express";
 
-import { generateResponse, generateChatName } from "../services/gemini.js";
+import {
+  generateResponse,
+  generateChatName,
+  identifyCropFromCloudinary,
+} from "../services/gemini.js";
+import { getDiseasePrediction } from "../services/diseaseService.js";
+import Analysis from "../models/Analysis.js";
 
 export const createMessage = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
@@ -12,6 +18,7 @@ export const createMessage = asyncHandler(async (req, res) => {
   const questionTimestamp = new Date();
 
   let name = await generateChatName(req.message.content, req.message.imagePath);
+  console.log(req.validatedData,name)
   let chat;
   try {
     const botResponseText = await generateResponse({
@@ -22,6 +29,7 @@ export const createMessage = asyncHandler(async (req, res) => {
       latitude,
       longitude,
     });
+    console.log(botResponseText)
 
     chat = await Chat.create({
       userId,
@@ -107,7 +115,6 @@ export const saveMessage = asyncHandler(async (req, res) => {
 });
 // For showing the user chat history
 export const getUserChats = asyncHandler(async (req, res) => {
-  console.log("GETTING HISTORY");
   const { userId } = getAuth(req);
   const chats = await Chat.find({ userId })
     .select("name createdAt updatedAt")
@@ -202,4 +209,55 @@ export const deleteChat = asyncHandler(async (req, res) => {
   return res
     .status(StatusCodes.OK)
     .json({ message: "Chat deleted successfully." });
+});
+export const analyzeCrop = asyncHandler(async (req, res) => {
+  const { userId } = getAuth(req);
+  const { imagePath } = req.query;
+
+  if (!imagePath) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "imagePath is required" });
+  }
+
+  // 1. Identify crop
+  const crop = await identifyCropFromCloudinary(imagePath);
+  console.log(crop)
+  if (crop === "ERROR" || crop === "INVALID" || crop.includes("ERROR") || crop.includes("INVALID")) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      success: false, 
+      message: `Crop identification failed: ${crop}`,
+    });
+  }
+
+  // 2. Detect disease
+  try {
+    const analysisData = await getDiseasePrediction(imagePath);
+
+    // 3. Save to DB
+    const analysis = await Analysis.create({
+      userId,
+      question: imagePath,
+      answer: analysisData,
+    });
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      crop,
+      analysis,
+    });
+  } catch (error) {
+    console.error("Analysis Error:", error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Disease detection failed during analysis.",
+    });
+  }
+});
+
+export const getUserAnalyses = asyncHandler(async (req, res) => {
+  const { userId } = getAuth(req);
+  const analyses = await Analysis.find({ userId }).sort({ createdAt: -1 });
+
+  return res.status(StatusCodes.OK).json({ success: true, analyses });
 });

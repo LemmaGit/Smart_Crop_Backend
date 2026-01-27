@@ -1,8 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
+import fetch from "node-fetch";
 import "dotenv/config";
-console.log(process.env.GEMINI_API_KEY4);
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY4);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY5);
 const model = genAI.getGenerativeModel({
   model: "gemini-2.5-flash-lite",
 });
@@ -60,6 +60,7 @@ export const generateResponse = async ({
   try {
     if (latitude && longitude) {
       weatherData = await getWeather(latitude, longitude);
+      console.log(weatherData)
     }
 
     let systemPrompt = `You are an intelligent AI assistant for a Smart Crop application. 
@@ -133,3 +134,48 @@ export const generateChatName = async (message, imagePath) => {
     return "New Chat"; // Fallback
   }
 };
+
+export const identifyCropFromCloudinary = async (imageUrl) => {
+  try {
+    const prompt = `
+You are an agricultural image classifier.
+
+TARGET CROPS: [Wheat, Potato, Pepper, Orange, Maize, Apple]
+
+TASK:
+1. Analyze the uploaded image.
+2. Determine if it is a leaf, fruit, or plant of one of the TARGET CROPS.
+3. If it is one of them, return ONLY the crop name.
+4. Otherwise return "INVALID".
+
+OUTPUT FORMAT:
+Return a single word string.
+`;
+
+    const response = await model.generateContent({
+      contents: [
+        {
+          parts: [
+            { text: prompt },
+            await fileToGenerativePart(imageUrl, "image/jpeg"),
+          ],
+        },
+      ],
+    });
+
+    const text = response.response.text()?.trim() || "INVALID";
+
+    const crops = ["Wheat", "Potato", "Pepper", "Orange", "Maize", "Apple"];
+    for (const crop of crops) {
+      if (text.toLowerCase().includes(crop.toLowerCase())) {
+        return crop;
+      }
+    }
+
+    return "INVALID";
+  } catch (e) {
+    console.error("Gemini Identification Error:", e);
+    return "ERROR";
+  }
+};
+
